@@ -694,6 +694,7 @@ constructMemcachedQuery({decr, Key, Value})
 		when is_integer(Value), Value >= 0 ->
 	MD5Key = md5(Key),
 	{MD5Key, ["decr ", b64(MD5Key), " ", integer_to_list(Value), "\r\n"], rtInt};
+constructMemcachedQuery({config}) -> {<<>>, ["config\r\n"], rtCmd};
 constructMemcachedQuery({flush_all, Expiration})
 		when is_integer(Expiration), Expiration >= 0 ->
 	{<<>>, ["flush_all ", integer_to_list(Expiration), "\r\n"], rtFlush};
@@ -800,6 +801,8 @@ data_receive_binary(Socket, DataSize) when is_integer(DataSize) ->
 	{ok, Binary} = gen_tcp:recv(Socket, DataSize),
 	Binary.
 
+data_receiver_error_reason(<<"ERROR",_/binary>>) ->
+	{error, {server_error, "not supported command"}};
 data_receiver_error_reason(<<"SERVER_ERROR ", Reason/binary>>) ->
 	data_receiver_error_reason(server_error, Reason);
 data_receiver_error_reason(<<"CLIENT_ERROR ", Reason/binary>>) ->
