@@ -27,10 +27,8 @@
 %%
 
 -type server() :: mcd:server().
--type get_result() :: mcd:get_result().
 
 -type satisfier_result() :: term().
--type satisfier_return() :: 'continue' | {'result', satisfier_result()}.
 -type satisfier() :: fun().
 % TODO: when dialyzer will fix this bug, uncomment this
 %-type intermediate_value() :: get_result() | 'waiting'.
