@@ -17,7 +17,7 @@ wait_connection(Pid, Started, Timeout) ->
         {{ok, [_ | _]}, _} ->
             ok;
         {Error, WaitMore} when WaitMore =< 0 ->
-            lager:error("Unexpected mcd answer: ~p~n", [Error]),
+            error_logger:error_msg("Unexpected mcd answer: ~p~n", [Error]),
             {error, timeout};
         {_, _} ->
             timer:sleep(10),

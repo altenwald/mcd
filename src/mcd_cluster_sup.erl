@@ -42,7 +42,7 @@ init(mcd_cluster) ->
     {ok, {{one_for_one, 10, 10}, Specs}};
 
 init({supervisor, Cluster}) ->
-    lager:info("Starting membase supervisor for ~p cluster", [Cluster]),
+    error_logger:info_msg("Starting membase supervisor for ~p cluster", [Cluster]),
     {ok, {{one_for_one, 10, 10}, [bucket_spec(B) || B <- buckets_by_cluster(Cluster)]}}.
 
 %% ==========================================================
@@ -55,7 +55,7 @@ mcd_bucket(B) ->
 mcd_cluster(C) ->
     {ok, Cs} = application:get_env(mcd, mcd_hosts),
     proplists:get_value(C, Cs).
-    
+
 buckets() ->
     {ok, Bs} = application:get_env(mcd, mcd_buckets),
     lists:usort([B || {B, _} <- Bs]).

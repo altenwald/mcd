@@ -138,11 +138,11 @@ handle_cast(_Request, State) ->
     {noreply, State}.
 
 handle_info({memcached, Pid, state, up}, #state{down = NodesDown} = State) ->
-    lager:info("memcached node(~p) seems to be back up~n", [Pid]),
+    error_logger:info_msg("memcached node(~p) seems to be back up~n", [Pid]),
     {noreply, State#state{down = lists:delete(Pid, NodesDown)}};
 
 handle_info({memcached, Pid, state, down}, #state{down = NodesDown} = State) ->
-    lager:info("memcached node(~p) is disconnected~n", [Pid]),
+    error_logger:info_msg("memcached node(~p) is disconnected~n", [Pid]),
     {noreply, State#state{down = lists:usort([Pid|NodesDown])}};
 
 handle_info(_Request, State) ->
@@ -151,7 +151,7 @@ handle_info(_Request, State) ->
 %%%
 
 init([ClusterName, Nodes]) ->
-    lager:info("starting mcd_cluster(~p): ~p ~p", [self(), ClusterName, Nodes]),
+    error_logger:info_msg("starting mcd_cluster(~p): ~p ~p", [self(), ClusterName, Nodes]),
     Peers = lists:map(fun ({Name, Addr, Weight}) ->
                 {ok, Pid} = mcd:start_link(Addr),
                 mcd:monitor(Pid, self(), [state]),
@@ -176,13 +176,13 @@ log_problems(Node, Command, Start, Res) ->
         {_, {exception, _}} -> true;
         _ -> false
     end,
-    case ShouldLog of 
+    case ShouldLog of
         true ->
             MD5 = case Command of
                 {'$constructed_query', M, _} -> M;
                 _ -> Command
             end,
-            lager:warning([{tag, mcd_long_response}], 
+            error_logger:warning_msg(
                 "Request took more than ~pms or exception caught: ~n"
                 "Node:~p~n"
                 "MD5:~p~n"
@@ -194,10 +194,10 @@ log_problems(Node, Command, Start, Res) ->
 call_node({_Name, ServerRef}=Node, Command) ->
     Start = now(),
     try gen_server:call(ServerRef, Command) of
-        Res -> 
+        Res ->
             log_problems(Node, Command, Start, Res),
             Res
-    catch C:R -> 
+    catch C:R ->
         log_problems(Node, Command, Start, {exception, {C,R}}),
         erlang:raise(C, R, erlang:get_stacktrace())
     end.
@@ -245,7 +245,7 @@ forwardQueryToMCD(From, Ring, Filter, MD5Key, Q) ->
             Reply2 =
                 case Reply of
                     {error, nonodes} ->
-                        lager:error("Node ~p doesn't see others: ~p~n", [node(), NodeList]),
+                        error_logger:error_msg("Node ~p doesn't see others: ~p~n", [node(), NodeList]),
                         {error, all_nodes_down};
                     _ -> Reply
                 end,
