@@ -694,7 +694,7 @@ constructMemcachedQuery({decr, Key, Value})
 		when is_integer(Value), Value >= 0 ->
 	MD5Key = md5(Key),
 	{MD5Key, ["decr ", b64(MD5Key), " ", integer_to_list(Value), "\r\n"], rtInt};
-constructMemcachedQuery({config}) -> {<<>>, ["config\r\n"], rtCmd};
+constructMemcachedQuery({config}) -> {<<>>, ["config get\r\n"], rtCfg};
 constructMemcachedQuery({flush_all, Expiration})
 		when is_integer(Expiration), Expiration >= 0 ->
 	{<<>>, ["flush_all ", integer_to_list(Expiration), "\r\n"], rtFlush};
@@ -778,6 +778,26 @@ data_receiver_accept_response(rtInt, _, Socket) ->
 	  {Int, "\r\n"} when is_integer(Int) -> {ok, Int};
 	  {error, _} when Response == <<"NOT_FOUND\r\n">> -> {error, notfound};
 	  {error, _} -> data_receiver_error_reason(Response)
+	end;
+data_receiver_accept_response(rtCfg, _, Socket) ->
+	{ok, HeaderLine} = gen_tcp:recv(Socket, 0),
+	case HeaderLine of
+		<<"END\r\n">> ->
+			{error, notfound};
+		<<"SERVER_ERROR ",_/binary>> ->
+			{error, notfound};
+		<<"CONFIG ", ClusterData/binary>> ->
+			[_ClusterName, _Value, DataSizeStr]
+				= string:tokens(binary_to_list(ClusterData), " \r\n"),
+			ok = inet:setopts(Socket, [{packet, raw}]),
+			Bin = data_receive_binary(Socket, list_to_integer(DataSizeStr)),
+			<<"\r\nEND\r\n">> = data_receive_binary(Socket, 7),
+			ok = inet:setopts(Socket, [{packet, line}]),
+			[_|Nodes] = string:tokens(binary_to_list(Bin), "\n"),
+			{ok, lists:map(fun(Node) ->
+				[_Name,Host,Port] = string:tokens(Node, "|"),
+				[Host, list_to_integer(Port)]
+			end, Nodes)}
 	end;
 data_receiver_accept_response(rtCmd, _, Socket) ->
 	data_receiver_accept_choice(Socket,
