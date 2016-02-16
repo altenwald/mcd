@@ -1,4 +1,4 @@
-%%% 
+%%%
 %%% This module uses memcached protocol to interface memcached daemon:
 %%% http://code.sixapart.com/svn/memcached/trunk/server/doc/protocol.txt
 %%%
@@ -44,7 +44,7 @@
 %%%   Value: int()>=0
 %%%   Time: int()>=0
 %%%   Reason: noconn | notfound | notstored | overload | timeout | noproc | all_nodes_down
-%%% 
+%%%
 -module(mcd).
 -behavior(gen_server).
 
@@ -317,7 +317,7 @@ unload_connection(ServerRef) ->
 % gen_server callbacks
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--record(state, { 
+-record(state, {
 	address, port = 11211, socket = nosocket,
 	receiver,		% data receiver process
 	requests = 0,		% client requests received
@@ -549,7 +549,7 @@ reconnect(#state{address = Address, port = Port, socket = OldSock} = State) ->
 
 	NewAnomalies = case is_atom(State#state.status) of
 		false -> State#state.anomalies;
-		true -> 
+		true ->
 			reportEvent(State, state, down),
 			incrAnomaly(State#state.anomalies, reconnects)
 	end,
