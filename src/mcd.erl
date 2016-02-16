@@ -786,6 +786,9 @@ data_receiver_accept_response(rtCfg, _, Socket) ->
 			{error, notfound};
 		<<"SERVER_ERROR ",_/binary>> ->
 			{error, notfound};
+		<<"ERROR\r\n">> ->
+			%% server doesn't support this command
+			{error, {server_error, "not supported command"}};
 		<<"CONFIG ", ClusterData/binary>> ->
 			[_ClusterName, _Value, DataSizeStr]
 				= string:tokens(binary_to_list(ClusterData), " \r\n"),
