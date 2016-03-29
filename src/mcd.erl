@@ -796,7 +796,7 @@ data_receiver_accept_response(rtCfg, _, Socket) ->
 			Bin = data_receive_binary(Socket, list_to_integer(DataSizeStr)),
 			<<"\r\nEND\r\n">> = data_receive_binary(Socket, 7),
 			ok = inet:setopts(Socket, [{packet, line}]),
-			[_|Nodes] = string:tokens(binary_to_list(Bin), "\n"),
+			[_|Nodes] = string:tokens(binary_to_list(Bin), " \n"),
 			{ok, lists:map(fun(Node) ->
 				[_Name,Host,Port] = string:tokens(Node, "|"),
 				[Host, list_to_integer(Port)]
